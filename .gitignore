@@ -2,8 +2,7 @@
 .vs/MediaLibrary/v14/.suo
 Achive/bin/
 Achive/obj/
-Achive/obj/Debug
-Achive/obj/Release
 ComicsDB/bin/
 ComicsDB/obj/
+packages/
 *.dbmdl
