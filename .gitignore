@@ -6,3 +6,4 @@ Achive/obj/Debug
 Achive/obj/Release
 ComicsDB/bin/
 ComicsDB/obj/
+*.dbmdl
