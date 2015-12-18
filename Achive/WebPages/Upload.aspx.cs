@@ -10,6 +10,7 @@ using System.IO.Compression;
 
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.Odbc;
 
 namespace Achive.WebPages
 {
@@ -21,12 +22,18 @@ namespace Achive.WebPages
 
         protected void register_Click(object sender, EventArgs e)
         {
+            ODBCVersion();
+        }
+
+        void SqlVersion()
+        {
             if (!fileupload1.HasFile)
                 return;
 
             string sTitle = Path.GetFileNameWithoutExtension(fileupload1.FileName);
 
             int retId = -1;
+
             using (SqlConnection con = new SqlConnection(connectionString))
             {
                 SqlCommand cmd = new SqlCommand();
@@ -126,7 +133,51 @@ namespace Achive.WebPages
                 }
             }
 
-            ParseAndSaveTitleImgUsingFileuploadControl(retId);
+            //ParseAndSaveTitleImgUsingFileuploadControl(retId);
+        }
+
+        void ODBCVersion()
+        {
+            if (!fileupload1.HasFile)
+                return;
+
+            string sTitle = Path.GetFileNameWithoutExtension(fileupload1.FileName);
+
+            Int32 retId = -1;
+            
+            using (OdbcConnection conn = new OdbcConnection(odbc_conn_string))
+            {
+                OdbcCommand cmd = new OdbcCommand();
+                cmd.Connection = conn;
+                
+                cmd.CommandText = "INSERT INTO comics (title, author) values(?, ?);";
+                cmd.Parameters.AddWithValue("@title", sTitle);
+                cmd.Parameters.AddWithValue("author", DBNull.Value);
+
+                try
+                {
+                    conn.Open();
+                    if (cmd.ExecuteNonQuery() > 0)
+                    {
+                        cmd.CommandText = "SELECT CAST(LAST_INSERT_ID() as unsigned integer);";
+                        object obj = cmd.ExecuteScalar();
+                        retId = Convert.ToInt32(obj);
+                    }
+                }
+                catch (Exception e1)
+                {
+                    throw e1;
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+
+            if (retId < 0)
+            {
+                return;
+            }
         }
 
         void ParseAndSaveTitleImgUsingFileuploadControl(int comic_id)
@@ -217,5 +268,6 @@ namespace Achive.WebPages
 
 
         private const string connectionString = "server = NV-PC\\SQLEXPRESS; database = archive; Integrated Security=SSPI";
+        private const string odbc_conn_string = "FIL=MySQLDatabase; DSN=raspi32;";
     }
 }
