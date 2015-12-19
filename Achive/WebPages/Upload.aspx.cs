@@ -30,13 +30,19 @@ namespace Achive.WebPages
             byte[] title_img_bytes;
             string title_img_ext;
 
+            string ext = Path.GetExtension(postedfile.FileName);
+            if (ext != ".zip")
+            {
+                return;
+            }
+
             byte[] filebytes = null;
             using (var br = new BinaryReader(postedfile.InputStream))
             {
                 filebytes = br.ReadBytes(postedfile.ContentLength);
             }
-
-            OneFileUploader.ExtractTitleImgFromZip(out title_img_bytes, out title_img_ext, postedfile.FileName, filebytes);
+            
+            OneFileUploader.ExtractTitleImgFromZip(out title_img_bytes, out title_img_ext, filebytes);
             if (title_img_bytes == null)
             {
                 return;
@@ -53,12 +59,18 @@ namespace Achive.WebPages
 
             //ODBC_comics_files(retId);
             string filepath = "\\\\RASPBERRYPI\\RaspberryPI\\Extern\\personal\\Acoross\\Codes\\DnD_4e_Assist\\DnD_4e_Assist\\dat\\comic_archive_data\\";
-            string fullpath = filepath + postedfile.FileName;
+            string randFilename = Path.GetRandomFileName();
+            string fullpath = filepath + randFilename;
+            while (File.Exists(fullpath))
+            {
+                randFilename = Path.GetRandomFileName();
+                fullpath = filepath + randFilename;
+            }
 
             //postedfile.SaveAs(filepathToSave);
             OneFileUploader.SaveComicFileTo(filebytes, fullpath);
 
-            OneFileUploader.odbc_Savefilepath(retId, postedfile.FileName);
+            OneFileUploader.odbc_Savefilepath(retId, postedfile.FileName, randFilename);
 
             OneFileUploader.odbc_SaveTitleImg(retId, title_img_bytes, title_img_ext);
         }

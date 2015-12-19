@@ -42,7 +42,7 @@ namespace ComicFileUploader
         {
             if (comic_file_bytes == null)
                 return;
-
+                        
             using (FileStream fs = File.Create(filepath))
             {
                 fs.Write(comic_file_bytes, 0, comic_file_bytes.Length);
@@ -51,45 +51,32 @@ namespace ComicFileUploader
             }
         }
 
-        public static void ExtractTitleImgFromZip(out byte[] title_img_bytes, out string title_img_ext, string filename, byte[] filebytes)
+        public static void ExtractTitleImgFromZip(out byte[] title_img_bytes, out string title_img_ext, byte[] filebytes)
         {
             // title image
             title_img_bytes = null;
             title_img_ext = null;
 
-            string ext = Path.GetExtension(filename);
-            if (ext != ".zip")
+            using (MemoryStream ms = new MemoryStream(filebytes))
             {
-                return;
-            }
-
-            MemoryStream ms = new MemoryStream(filebytes);
-            ZipArchive zarc = new ZipArchive(ms);
-            foreach (ZipArchiveEntry ent in zarc.Entries)
-            {
-                string zipext = Path.GetExtension(ent.Name);
-                if (zipext == ".jpg" || zipext == ".jpeg")
+                using (ZipArchive zarc = new ZipArchive(ms))
                 {
-                    using (var zstrm = ent.Open())
+                    foreach (ZipArchiveEntry ent in zarc.Entries)
                     {
-                        title_img_bytes = new byte[ent.Length];
-                        zstrm.Read(title_img_bytes, 0, (int)ent.Length);
+                        string zipext = Path.GetExtension(ent.Name);
+                        if (zipext == ".jpg" || zipext == ".jpeg")
+                        {
+                            using (var zstrm = ent.Open())
+                            {
+                                title_img_bytes = new byte[ent.Length];
+                                zstrm.Read(title_img_bytes, 0, (int)ent.Length);
 
-                        title_img_ext = Path.GetExtension(ent.Name);
-                        //using (var fs = File.Create("c:/test/img/test.jpg"))
-                        //{
-                        //    fs.Write(title_img_bytes, 0, (int)ent.Length);
-                        //    fs.Close();
-                        //}
+                                title_img_ext = Path.GetExtension(ent.Name);
+                            }
 
-                        //using (var osw = new StreamWriter(Context.Response.OutputStream))
-                        //{
-                        //    osw.Write(sr.ReadToEnd());
-                        //    Context.Response.ContentType = "image/JPEG";
-                        //}
+                            break;
+                        }
                     }
-
-                    break;
                 }
             }
         }
@@ -104,44 +91,47 @@ namespace ComicFileUploader
 
             using (OdbcConnection conn = new OdbcConnection(odbc_conn_string))
             {
-                var cmd = new OdbcCommand();
-                cmd.Connection = conn;
-
-                cmd.CommandText = "INSERT INTO comics (title, author) values(?, ?);";
-                cmd.Parameters.AddWithValue("@title", sTitle);
-                cmd.Parameters.AddWithValue("author", DBNull.Value);
-
-                try
+                using (var cmd = new OdbcCommand())
                 {
-                    conn.Open();
-                    if (cmd.ExecuteNonQuery() > 0)
+                    cmd.Connection = conn;
+
+                    cmd.CommandText = "INSERT INTO comics (title, author) values(?, ?);";
+                    cmd.Parameters.AddWithValue("@title", sTitle);
+                    cmd.Parameters.AddWithValue("author", DBNull.Value);
+
+                    try
                     {
-                        cmd.CommandText = "SELECT CAST(LAST_INSERT_ID() as unsigned integer);";
-                        object obj = cmd.ExecuteScalar();
-                        retId = Convert.ToInt32(obj);
+                        conn.Open();
+                        if (cmd.ExecuteNonQuery() > 0)
+                        {
+                            cmd.CommandText = "SELECT CAST(LAST_INSERT_ID() as unsigned integer);";
+                            object obj = cmd.ExecuteScalar();
+                            retId = Convert.ToInt32(obj);
+                        }
                     }
-                }
-                catch (Exception e1)
-                {
-                    throw e1;
-                }
-                finally
-                {
-                    conn.Close();
-                }
+                    catch (Exception e1)
+                    {
+                        throw e1;
+                    }
+                    finally
+                    {
+                        conn.Close();
+                    }
+                }   
             }
 
             return retId;
         }
 
-        public static void odbc_Savefilepath(int comic_id, string filepath)
+        public static void odbc_Savefilepath(int comic_id, string org_filename, string filepath)
         {
             using (var cmd = new OdbcCommand())
             {
                 cmd.CommandText = "UPDATE comics_filepaths " +
-                    "SET filepath = ? " +
+                    "SET org_filename = ?, filepath = ? " +
                     "WHERE comic_id = ?;";
 
+                cmd.Parameters.AddWithValue("@org_filename", org_filename);
                 cmd.Parameters.AddWithValue("@filepath", filepath);
                 cmd.Parameters.AddWithValue("@comic_id", comic_id);
 
@@ -151,8 +141,9 @@ namespace ComicFileUploader
 
             using (var cmd2 = new OdbcCommand())
             {
-                cmd2.CommandText = "INSERT INTO comics_filepaths (comic_id, filepath) values(?, ?);";
+                cmd2.CommandText = "INSERT INTO comics_filepaths (comic_id, org_filename, filepath) values(?, ?, ?);";
                 cmd2.Parameters.AddWithValue("@comic_id", comic_id);
+                cmd2.Parameters.AddWithValue("@org_filename", org_filename);
                 cmd2.Parameters.AddWithValue("@filepath", filepath);
 
                 if (odbcExecuter.ExecuteNonQuery(odbc_conn_string, cmd2) < 1)

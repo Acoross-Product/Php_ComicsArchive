@@ -1,6 +1,6 @@
 ﻿drop table comics_title_img;
-drop table authors;
-drop table comics_files;
+/*drop table authors;
+drop table comics_files;*/
 drop table comics_filepaths;
 drop table comics;
 
@@ -8,8 +8,7 @@ CREATE TABLE comics (
     comic_id INT NOT NULL AUTO_INCREMENT,
     title    NVARCHAR(255) NOT NULL,
     author   NVARCHAR(255) NULL,
-    CONSTRAINT PK_comics PRIMARY KEY NONCLUSTERED (comic_id ASC),
-    CONSTRAINT AK_comics UNIQUE NONCLUSTERED (title ASC)
+    CONSTRAINT PK_comics PRIMARY KEY NONCLUSTERED (comic_id ASC)
 );
 
 CREATE TABLE comics_title_img (
@@ -35,6 +34,7 @@ CREATE TABLE comics_title_img (
 
 CREATE TABLE comics_filepaths (
     comic_id  INT             NOT NULL,
+    org_filename  NVARCHAR (256)  NOT NULL,
     filepath  NVARCHAR (256)   NOT NULL,
     CONSTRAINT PK_comics_title_img PRIMARY KEY CLUSTERED (comic_id ASC)
 );
