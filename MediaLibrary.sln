@@ -6,6 +6,11 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "ComicsDB", "ComicsDB\ComicsDB.sqlproj", "{E0876986-3CB2-4639-BB28-8C88D986EC4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Achive", "Achive\Achive.csproj", "{37A75746-B13E-41BF-9DB4-DE69FE4D4D9B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107} = {EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComicFileUploader", "ComicFileUploader\ComicFileUploader.csproj", "{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +40,14 @@ Global
 		{37A75746-B13E-41BF-9DB4-DE69FE4D4D9B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{37A75746-B13E-41BF-9DB4-DE69FE4D4D9B}.Release|x64.ActiveCfg = Release|x64
 		{37A75746-B13E-41BF-9DB4-DE69FE4D4D9B}.Release|x64.Build.0 = Release|x64
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Debug|x64.Build.0 = Debug|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Release|x64.ActiveCfg = Release|Any CPU
+		{EA448A4B-84EC-4A84-8C8A-48EBEA6C4107}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

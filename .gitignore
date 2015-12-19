@@ -6,3 +6,7 @@ ComicsDB/bin/
 ComicsDB/obj/
 packages/
 *.dbmdl
+ComicFileUploader/bin
+ComicFileUploader/obj
+ComicFileUploaderApp/bin
+ComicFileUploaderApp/obj
