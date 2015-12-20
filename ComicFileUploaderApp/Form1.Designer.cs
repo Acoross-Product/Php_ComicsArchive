@@ -37,29 +37,31 @@
             this.btReisterLibrary = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
+            this.btRegisterSelected = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "압축파일|*.zip";
+            this.openFileDialog1.Filter = "압축파일|*.zip;*.rar";
             this.openFileDialog1.Multiselect = true;
             // 
             // listBox1
             // 
             this.listBox1.FormattingEnabled = true;
+            this.listBox1.HorizontalScrollbar = true;
             this.listBox1.ItemHeight = 12;
-            this.listBox1.Location = new System.Drawing.Point(26, 132);
+            this.listBox1.Location = new System.Drawing.Point(26, 105);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(332, 148);
+            this.listBox1.Size = new System.Drawing.Size(559, 232);
             this.listBox1.TabIndex = 1;
             // 
             // pbProgress
             // 
             this.pbProgress.Location = new System.Drawing.Point(26, 60);
             this.pbProgress.Name = "pbProgress";
-            this.pbProgress.Size = new System.Drawing.Size(205, 23);
+            this.pbProgress.Size = new System.Drawing.Size(400, 23);
             this.pbProgress.TabIndex = 3;
             // 
             // lbProgress
@@ -78,7 +80,7 @@
             // 
             // btReisterLibrary
             // 
-            this.btReisterLibrary.Location = new System.Drawing.Point(218, 13);
+            this.btReisterLibrary.Location = new System.Drawing.Point(445, 14);
             this.btReisterLibrary.Name = "btReisterLibrary";
             this.btReisterLibrary.Size = new System.Drawing.Size(140, 23);
             this.btReisterLibrary.TabIndex = 5;
@@ -89,9 +91,10 @@
             // pictureBox1
             // 
             this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox1.Location = new System.Drawing.Point(386, 13);
+            this.pictureBox1.Location = new System.Drawing.Point(616, 14);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(491, 319);
+            this.pictureBox1.Size = new System.Drawing.Size(250, 321);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
             // 
@@ -99,14 +102,25 @@
             // 
             this.textBox1.Location = new System.Drawing.Point(28, 14);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(184, 21);
+            this.textBox1.Size = new System.Drawing.Size(398, 21);
             this.textBox1.TabIndex = 7;
+            // 
+            // btRegisterSelected
+            // 
+            this.btRegisterSelected.Location = new System.Drawing.Point(445, 60);
+            this.btRegisterSelected.Name = "btRegisterSelected";
+            this.btRegisterSelected.Size = new System.Drawing.Size(140, 23);
+            this.btRegisterSelected.TabIndex = 8;
+            this.btRegisterSelected.Text = "선택한 파일 등록";
+            this.btRegisterSelected.UseVisualStyleBackColor = true;
+            this.btRegisterSelected.Click += new System.EventHandler(this.btRegisterSelected_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(900, 357);
+            this.ClientSize = new System.Drawing.Size(887, 357);
+            this.Controls.Add(this.btRegisterSelected);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.btReisterLibrary);
@@ -115,7 +129,6 @@
             this.Controls.Add(this.listBox1);
             this.Name = "Form1";
             this.Text = "Form1";
-            this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -132,6 +145,7 @@
         private System.Windows.Forms.Button btReisterLibrary;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button btRegisterSelected;
     }
 }
 
