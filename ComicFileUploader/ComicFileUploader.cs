@@ -33,6 +33,29 @@ namespace ComicFileUploader
                 }
             }
         }
+
+        public static object ExecuteScalar(string odbc_conn_string, OdbcCommand cmd)
+        {
+            using (var conn = new OdbcConnection(odbc_conn_string))
+            {
+                cmd.Connection = conn;
+
+                try
+                {
+                    conn.Open();
+                    cmd.Prepare();
+                    return cmd.ExecuteScalar();
+                }
+                catch (Exception e1)
+                {
+                    throw e1;
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+        }
     }
 
     public class OneFileUploader
@@ -42,12 +65,39 @@ namespace ComicFileUploader
         {
             if (comic_file_bytes == null)
                 return;
-                        
+
             using (FileStream fs = File.Create(filepath))
             {
                 fs.Write(comic_file_bytes, 0, comic_file_bytes.Length);
 
                 fs.Close();
+            }
+        }
+
+        public static void ExtractTitleImgFromZip(out byte[] title_img_bytes, out string title_img_ext, Stream zipStream)
+        {
+            // title image
+            title_img_bytes = null;
+            title_img_ext = null;
+
+            using (ZipArchive zarc = new ZipArchive(zipStream))
+            {
+                foreach (ZipArchiveEntry ent in zarc.Entries)
+                {
+                    string zipext = Path.GetExtension(ent.Name);
+                    if (zipext == ".jpg" || zipext == ".jpeg")
+                    {
+                        using (var zstrm = ent.Open())
+                        {
+                            title_img_bytes = new byte[ent.Length];
+                            zstrm.Read(title_img_bytes, 0, (int)ent.Length);
+
+                            title_img_ext = Path.GetExtension(ent.Name);
+                        }
+
+                        break;
+                    }
+                }
             }
         }
 
@@ -84,6 +134,93 @@ namespace ComicFileUploader
 
 
         private const string odbc_conn_string = "FIL=MySQLDatabase; DSN=raspi;";
+
+        public static bool odbc_CheckSameComicsNew(string filename)
+        {
+            using (var cmd = new OdbcCommand())
+            {
+                cmd.CommandText = "SELECT comic_id FROM comics_new WHERE filename = ?;";
+                cmd.Parameters.AddWithValue("@filename", filename);
+
+                object ret = odbcExecuter.ExecuteScalar(odbc_conn_string, cmd);
+
+                int ID = Convert.ToInt32(ret);
+                if (ID > 0)
+                    return true;
+                else
+                    return false;
+            }
+        }
+
+        public static void odbc_SaveComicsNew(string filename, string filepath, string org_filename, string title, byte[] title_img, string title_img_ext)
+        {
+            using (var cmd = new OdbcCommand())
+            {
+                cmd.CommandText = "UPDATE comics_new " + 
+                                "SET filepath = ?, org_filename = ?, title = ?, title_img = ?, title_img_ext = ?" +
+                                "WHERE filename = ?";
+                cmd.Parameters.AddWithValue("@filepath", filepath);
+                cmd.Parameters.AddWithValue("@org_filename", org_filename);
+                cmd.Parameters.AddWithValue("@title", title);
+                cmd.Parameters.Add("@title_img", OdbcType.Binary);
+                cmd.Parameters["@title_img"].Value = title_img;
+                cmd.Parameters.AddWithValue("@ext", title_img_ext);
+                cmd.Parameters.AddWithValue("@filename", filename);
+
+                if (odbcExecuter.ExecuteNonQuery(odbc_conn_string, cmd) < 1)
+                {
+                    int ID;
+                    odbc_InsertNew_ComicsNew(out ID, filename, filepath, org_filename, title, title_img, title_img_ext);
+                    if (ID < 1)
+                    {
+                        throw new Exception("comics_new fail");
+                    }
+                }
+            }
+        }
+
+        public static void odbc_InsertNew_ComicsNew(out int ID, string filename, string filepath, string org_filename, string title, byte[] title_img, string title_img_ext)
+        {
+            ID = -1;
+
+            using (OdbcConnection conn = new OdbcConnection(odbc_conn_string))
+            {
+                using (var cmd = new OdbcCommand())
+                {
+                    cmd.Connection = conn;
+
+                    cmd.CommandText = "INSERT INTO comics_new (filename, filepath, org_filename, title, title_img, title_img_ext) " +
+                                      "values(?, ?, ?, ?, ?, ?);";
+                    cmd.Parameters.AddWithValue("@filename", filename);
+                    cmd.Parameters.AddWithValue("@filepath", filepath);
+                    cmd.Parameters.AddWithValue("@org_filename", org_filename);
+                    cmd.Parameters.AddWithValue("@title", title);
+                    cmd.Parameters.Add("@title_img", OdbcType.Binary);
+                    cmd.Parameters["@title_img"].Value = title_img;
+                    cmd.Parameters.AddWithValue("@ext", title_img_ext);
+
+                    try
+                    {
+                        conn.Open();
+                        cmd.Prepare();
+                        if (cmd.ExecuteNonQuery() > 0)
+                        {
+                            cmd.CommandText = "SELECT CAST(LAST_INSERT_ID() as unsigned integer);";
+                            object obj = cmd.ExecuteScalar();
+                            ID = Convert.ToInt32(obj);
+                        }
+                    }
+                    catch (Exception e1)
+                    {
+                        throw e1;
+                    }
+                    finally
+                    {
+                        conn.Close();
+                    }
+                }
+            }
+        }
 
         public static int odbc_InsertNewComics(string sTitle)
         {

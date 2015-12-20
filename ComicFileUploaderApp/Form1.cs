@@ -22,16 +22,45 @@ namespace ComicFileUploaderApp
             InitializeComponent();
         }
 
-        // 파일 열기 버튼 클릭
-        private void btOpenFile_Click(object sender, EventArgs e)
+        private void btRegister_Click(object sender, EventArgs e)
         {
-            if (openFileDialog1.ShowDialog() != DialogResult.OK)
+            string rootPath = textBox1.Text;
+            if (Directory.Exists(rootPath))
+            {
+                folderBrowserDialog1.SelectedPath = rootPath;
+            }
+
+            if (folderBrowserDialog1.ShowDialog() != DialogResult.OK)
                 return;
 
-            if (openFileDialog1.FileNames.Length <= 0)
+            string Dir = folderBrowserDialog1.SelectedPath;
+            var di = new System.IO.DirectoryInfo(Dir);
+            if (!di.Exists)
                 return;
-            
-            string Dir = openFileDialog1.FileName.TrimEnd(openFileDialog1.SafeFileName.ToCharArray());
+
+            foreach(var d in di.GetDirectories())
+            {
+                Console.WriteLine(d.FullName);
+            }
+
+            backgroundWorker1.RunWorkerAsync(di);
+        }
+
+        // import 버튼 클릭
+        private void btImport_Click(object sender, EventArgs e)
+        {
+            //if (openFileDialog1.ShowDialog() != DialogResult.OK)
+            //    return;
+
+            //if (openFileDialog1.FileNames.Length <= 0)
+            //    return;
+
+            //string Dir = openFileDialog1.FileName.TrimEnd(openFileDialog1.SafeFileName.ToCharArray());
+
+            if (folderBrowserDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            string Dir = folderBrowserDialog1.SelectedPath;
             var di = new System.IO.DirectoryInfo(Dir);
             if (!di.Exists)
                 return;
@@ -39,11 +68,44 @@ namespace ComicFileUploaderApp
             backgroundWorker1.RunWorkerAsync(di);
         }
         
-        static bool processOneFile(FileInfo postedfile)
+        static bool RegisterOneFile(FileInfo postedfile)
         {
+            string ext = Path.GetExtension(postedfile.Name);
+            if (ext != ".zip")
+            {
+                return false;
+            }
+
             byte[] title_img_bytes;
             string title_img_ext;
+            using (var fs = postedfile.OpenRead())
+            {
+                OneFileUploader.ExtractTitleImgFromZip(out title_img_bytes, out title_img_ext, fs);
+            }
 
+            if (title_img_bytes == null)
+            {
+                return false;
+            }
+
+            string sTitle = Path.GetFileNameWithoutExtension(postedfile.Name);
+            string filename = postedfile.Name;
+            int i = 0;
+            while (OneFileUploader.odbc_CheckSameComicsNew(filename) == true)
+            {
+                filename = sTitle + "_" + i.ToString() + ext;
+            }
+
+            File.Move(postedfile.FullName, postedfile.DirectoryName + "\\" + filename);
+
+            int ID = -1;
+            OneFileUploader.odbc_InsertNew_ComicsNew(out ID, filename, postedfile.DirectoryName, postedfile.Name, sTitle, title_img_bytes, title_img_ext);
+
+            return true;
+        }
+
+        static bool ImportOneFile(FileInfo postedfile)
+        {
             string ext = Path.GetExtension(postedfile.Name);
             if (ext != ".zip")
             {
@@ -51,17 +113,19 @@ namespace ComicFileUploaderApp
             }
 
             byte[] filebytes = new byte[(int)postedfile.Length];
+            byte[] title_img_bytes;
+            string title_img_ext;
             using (var fs = postedfile.OpenRead())
             {
                 fs.Read(filebytes, 0, (int)postedfile.Length);
             }
 
             OneFileUploader.ExtractTitleImgFromZip(out title_img_bytes, out title_img_ext, filebytes);
+
             if (title_img_bytes == null)
             {
                 return false;
             }
-            //output_title_img.ImageUrl = "data:image/jpeg;base64," + Convert.ToBase64String(title_img_bytes);
 
             string sTitle = Path.GetFileNameWithoutExtension(postedfile.Name);
             int retId = OneFileUploader.odbc_InsertNewComics(sTitle);
@@ -71,8 +135,6 @@ namespace ComicFileUploaderApp
             }
 
             OneFileUploader.odbc_SaveTitleImg(retId, title_img_bytes, title_img_ext);
-
-            //ODBC_comics_files(retId);
 
             string randFilename = Path.GetRandomFileName();
             string fullpath = filepath + randFilename;            
@@ -91,16 +153,6 @@ namespace ComicFileUploaderApp
 
         const string filepath = "\\\\RASPBERRYPI\\RaspberryPI\\Extern\\personal\\Acoross\\Codes\\DnD_4e_Assist\\DnD_4e_Assist\\dat\\comic_archive_data\\";
 
-        // 모두 업로드 버튼
-        private void btUploadAll_Click(object sender, EventArgs e)
-        {
-            foreach (string filename in (ArrayList)listBox1.DataSource)
-            {
-                string sTitle = Path.GetFileNameWithoutExtension(filename);
-                OneFileUploader.odbc_InsertNewComics(filename);
-            }
-        }
-
         void ProcessFileUploadEnd(string filename, string msg)
         {
             Logger.Add("[upload " + msg + "]" + filename);
@@ -111,41 +163,66 @@ namespace ComicFileUploaderApp
             });
         }
 
+        delegate void OneDirDelegate(DirectoryInfo di);
+
+        static void TraverseAllSubDir(DirectoryInfo di, OneDirDelegate dg)
+        {
+            dg(di);
+
+            foreach (var dii in di.GetDirectories())
+            {
+                TraverseAllSubDir(dii, dg);
+            }
+        }
+
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             var di = (DirectoryInfo)e.Argument;
 
             var files = di.GetFiles();
 
-            Logger.Add(DateTime.Now.ToShortTimeString());
+            Logger.Add(DateTime.Now.ToLongDateString());
+            Logger.Add(DateTime.Now.ToLongTimeString());
             Logger.Add("upload start.");
-            
-            int filenum = files.Length;
-            int done = 0;
-            foreach (FileInfo fi in di.GetFiles())
-            {
-                int per = 100 * done / filenum;
-                backgroundWorker1.ReportProgress(per, fi.Name);
 
-                try
+            int filenum = 0;
+            int done = 0;
+
+            TraverseAllSubDir(di,
+                (OneDirDelegate)delegate (DirectoryInfo di2)
                 {
-                    if (processOneFile(fi))
-                    {
-                        ProcessFileUploadEnd(fi.Name, "success");
-                    }
-                    else
-                    {
-                        ProcessFileUploadEnd(fi.Name, "fail");
-                    }
-                }
-                catch (Exception ex)
+                    filenum += di2.GetFiles().Length;
+                });
+
+            TraverseAllSubDir(di, 
+                (OneDirDelegate)delegate(DirectoryInfo di2)
                 {
-                    ProcessFileUploadEnd(fi.Name, "exception");
-                    Logger.Add(ex.ToString());
-                }
-                
-                ++done;
-            }
+                    foreach (var fi in di2.GetFiles())
+                    {
+                        int per = 100 * done / filenum;
+                        backgroundWorker1.ReportProgress(per, fi.Name);
+
+                        try
+                        {
+                            //if (ImportOneFile(fi))
+                            if (RegisterOneFile(fi))
+                            {
+                                ProcessFileUploadEnd(fi.Name, "success");
+                            }
+                            else
+                            {
+                                ProcessFileUploadEnd(fi.Name, "fail");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ProcessFileUploadEnd(fi.Name, "exception");
+                            Logger.Add(ex.ToString());
+                        }
+
+                        ++done;
+                    }
+                });
 
             backgroundWorker1.ReportProgress(100, "complete!");
             MessageBox.Show("file upload end.");
