@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Collections;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace ComicFileUploaderApp
 {
@@ -54,12 +55,12 @@ namespace ComicFileUploaderApp
             });
         }
         
-        private void processOneFile(FileInfo fi)
+        private void processOneFile(string libDirName, FileInfo fi)
         {
             try
             {
                 byte[] title_img;
-                var ret = LocalComicFileUploader.RegisterOneFile(fi, out title_img);
+                var ret = LocalComicFileUploader.RegisterOneFile(libDirName, fi, out title_img);
                 if (title_img != null)
                 {
                     pictureBox1.Invoke((MethodInvoker)delegate
@@ -87,13 +88,17 @@ namespace ComicFileUploaderApp
                 Logger.Add(ex.ToString());
             }
         }
-
+        
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             var di = (DirectoryInfo)e.Argument;
 
             var files = di.GetFiles();
+            var libDirName = di.FullName;
 
+            if (!libDirName.StartsWith(LocalComicFileUploader.libDirRoot))
+                return;
+            
             Logger.Add(DateTime.Now.ToLongDateString());
             Logger.Add(DateTime.Now.ToLongTimeString());
             Logger.Add("upload start.");
@@ -113,9 +118,9 @@ namespace ComicFileUploaderApp
                     foreach (var fi in di2.GetFiles())
                     {
                         int per = 100 * done / filenum;
-                        backgroundWorker1.ReportProgress(per, fi.Name);
+                        backgroundWorker1.ReportProgress(per, "[" + done.ToString() + "/" + filenum.ToString() + "]" + fi.Name);
 
-                        processOneFile(fi);
+                        processOneFile(libDirName, fi);
 
                         ++done;
                     }
@@ -134,28 +139,28 @@ namespace ComicFileUploaderApp
             if (openFileDialog1.FileNames.Length <= 0)
                 return;
 
-            Logger.Add(DateTime.Now.ToLongDateString());
-            Logger.Add(DateTime.Now.ToLongTimeString());
-            Logger.Add("upload start - selected files.");
+            //Logger.Add(DateTime.Now.ToLongDateString());
+            //Logger.Add(DateTime.Now.ToLongTimeString());
+            //Logger.Add("upload start - selected files.");
 
-            int filenum = openFileDialog1.FileNames.Length;
-            int done = 0;
+            //int filenum = openFileDialog1.FileNames.Length;
+            //int done = 0;
 
-            foreach (var fn in openFileDialog1.FileNames)
-            {
-                var fi = new FileInfo(fn);
+            //foreach (var fn in openFileDialog1.FileNames)
+            //{
+            //    var fi = new FileInfo(fn);
 
-                int per = 100 * done / filenum;
-                backgroundWorker1.ReportProgress(per, fi.Name);
+            //    int per = 100 * done / filenum;
+            //    backgroundWorker1.ReportProgress(per, fi.Name);
 
-                processOneFile(fi);
+            //    processOneFile(fi);
 
-                ++done;
-            }
+            //    ++done;
+            //}
 
-            Logger.Add("upload end - selected files.");
-            backgroundWorker1.ReportProgress(100, "complate!");
-            MessageBox.Show("upload end - selected files.");
+            //Logger.Add("upload end - selected files.");
+            //backgroundWorker1.ReportProgress(100, "complate!");
+            //MessageBox.Show("upload end - selected files.");
         }
 
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -168,6 +173,11 @@ namespace ComicFileUploaderApp
         {
             listBox1.DataSource = null;
             listBox1.DataSource = m_EndJobList;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            lbProgress.Text = "";
         }
     }
 }

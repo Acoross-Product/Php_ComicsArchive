@@ -52,7 +52,7 @@
             this.listBox1.FormattingEnabled = true;
             this.listBox1.HorizontalScrollbar = true;
             this.listBox1.ItemHeight = 12;
-            this.listBox1.Location = new System.Drawing.Point(26, 105);
+            this.listBox1.Location = new System.Drawing.Point(26, 121);
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(559, 232);
             this.listBox1.TabIndex = 1;
@@ -67,10 +67,11 @@
             // lbProgress
             // 
             this.lbProgress.AutoSize = true;
-            this.lbProgress.Location = new System.Drawing.Point(26, 105);
+            this.lbProgress.Location = new System.Drawing.Point(30, 98);
             this.lbProgress.Name = "lbProgress";
-            this.lbProgress.Size = new System.Drawing.Size(0, 12);
+            this.lbProgress.Size = new System.Drawing.Size(32, 12);
             this.lbProgress.TabIndex = 4;
+            this.lbProgress.Text = "label";
             // 
             // backgroundWorker1
             // 
@@ -93,7 +94,7 @@
             this.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox1.Location = new System.Drawing.Point(616, 14);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(250, 321);
+            this.pictureBox1.Size = new System.Drawing.Size(250, 339);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
@@ -119,7 +120,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(887, 357);
+            this.ClientSize = new System.Drawing.Size(887, 375);
             this.Controls.Add(this.btRegisterSelected);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.pictureBox1);
@@ -129,6 +130,7 @@
             this.Controls.Add(this.listBox1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

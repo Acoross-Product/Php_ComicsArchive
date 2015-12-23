@@ -1,8 +1,11 @@
-﻿/*
-DROP TABLE comics_authors
-DROP TABLE authors
+﻿use archive2;
+
+
+DROP TABLE comics_authors;
+DROP TABLE authors;
 DROP TABLE comics_new;
-;*/
+DROP PROCEDURE sp_AuthorComicAll_get;
+
 
 CREATE TABLE comics_new (
     comic_id     INT NOT NULL AUTO_INCREMENT,
@@ -13,6 +16,8 @@ CREATE TABLE comics_new (
     title        NVARCHAR(255) NOT NULL,
     title_img     MEDIUMBLOB NOT NULL,
     title_img_ext  NVARCHAR(25)   NOT NULL,
+    local_libDir      NVARCHAR(1000) NOT NULL,
+    relative_filedir      NVARCHAR(1000) NOT NULL,
     CONSTRAINT PK_comics PRIMARY KEY NONCLUSTERED (comic_id ASC),
     CONSTRAINT AK_comics UNIQUE NONCLUSTERED (filename ASC)
 );

@@ -87,7 +87,7 @@ namespace ComicFileUploader
                 foreach (var ent in rarc.Entries)
                 {
                     string zipext = Path.GetExtension(ent.FilePath).ToLower();
-                    if (zipext == ".jpg" || zipext == ".jpeg" || zipext == ".bmp" || zipext == ".png" || zipext == ".gif")
+                    if (zipext == ".jpg" || zipext == ".jpeg")
                     {
                         using (var rstrm = ent.OpenEntryStream())
                         {
@@ -113,7 +113,7 @@ namespace ComicFileUploader
                 foreach (ZipArchiveEntry ent in zarc.Entries)
                 {   
                     string zipext = Path.GetExtension(ent.Name).ToLower();
-                    if (zipext == ".jpg" || zipext == ".jpeg" || zipext == ".bmp" || zipext == ".png" || zipext == ".gif")
+                    if (zipext == ".jpg" || zipext == ".jpeg")
                     {
                         using (var zstrm = ent.Open())
                         {
@@ -167,12 +167,12 @@ namespace ComicFileUploader
             }
         }
 
-        public static void odbc_SaveComicsNew(string filename, string filepath, string org_filename, int filesize, string title, byte[] title_img, string title_img_ext)
+        public static void odbc_SaveComicsNew(string filename, string filepath, string org_filename, int filesize, string title, byte[] title_img, string title_img_ext, string local_libDir, string relative_filedir)
         {
             using (var cmd = new OdbcCommand())
             {
-                cmd.CommandText = "UPDATE comics_new " + 
-                                "SET filepath = ?, org_filename = ?, filesize = ?, title = ?, title_img = ?, title_img_ext = ?" +
+                cmd.CommandText = "UPDATE comics_new " +
+                                "SET filepath = ?, org_filename = ?, filesize = ?, title = ?, title_img = ?, title_img_ext = ?, local_libDir = ?, relative_filedir = ?" +
                                 "WHERE filename = ?";
                 cmd.Parameters.AddWithValue("@filepath", filepath);
                 cmd.Parameters.AddWithValue("@org_filename", org_filename);
@@ -181,12 +181,14 @@ namespace ComicFileUploader
                 cmd.Parameters.Add("@title_img", OdbcType.Binary);
                 cmd.Parameters["@title_img"].Value = title_img;
                 cmd.Parameters.AddWithValue("@ext", title_img_ext);
+                cmd.Parameters.AddWithValue("@local_libDir", local_libDir);
+                cmd.Parameters.AddWithValue("@relative_filedir", relative_filedir);
                 cmd.Parameters.AddWithValue("@filename", filename);
 
                 if (odbcExecuter.ExecuteNonQuery(odbc_conn_string, cmd) < 1)
                 {
                     int ID;
-                    odbc_InsertNew_ComicsNew(out ID, filename, filepath, org_filename, filesize, title, title_img, title_img_ext);
+                    odbc_InsertNew_ComicsNew(out ID, filename, filepath, org_filename, filesize, title, title_img, title_img_ext, local_libDir, relative_filedir);
                     if (ID < 1)
                     {
                         throw new Exception("comics_new fail");
@@ -195,7 +197,7 @@ namespace ComicFileUploader
             }
         }
 
-        public static void odbc_InsertNew_ComicsNew(out int ID, string filename, string filepath, string org_filename, int filesize, string title, byte[] title_img, string title_img_ext)
+        public static void odbc_InsertNew_ComicsNew(out int ID, string filename, string filepath, string org_filename, int filesize, string title, byte[] title_img, string title_img_ext, string local_libDir, string relative_filedir)
         {
             ID = -1;
 
@@ -205,8 +207,8 @@ namespace ComicFileUploader
                 {
                     cmd.Connection = conn;
 
-                    cmd.CommandText = "INSERT INTO comics_new (filename, filepath, org_filename, filesize, title, title_img, title_img_ext) " +
-                                      "values(?, ?, ?, ?, ?, ?, ?);";
+                    cmd.CommandText = "INSERT INTO comics_new (filename, filepath, org_filename, filesize, title, title_img, title_img_ext, local_libDir, relative_filedir) " +
+                                      "values(?, ?, ?, ?, ?, ?, ?, ?, ?);";
                     cmd.Parameters.AddWithValue("@filename", filename);
                     cmd.Parameters.AddWithValue("@filepath", filepath);
                     cmd.Parameters.AddWithValue("@org_filename", org_filename);
@@ -215,6 +217,8 @@ namespace ComicFileUploader
                     cmd.Parameters.Add("@title_img", OdbcType.Binary);
                     cmd.Parameters["@title_img"].Value = title_img;
                     cmd.Parameters.AddWithValue("@ext", title_img_ext);
+                    cmd.Parameters.AddWithValue("@local_libDir", local_libDir);
+                    cmd.Parameters.AddWithValue("@relative_filedir", relative_filedir);
 
                     try
                     {

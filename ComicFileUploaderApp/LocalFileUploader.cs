@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using ComicFileUploader;
+using System.Drawing;
 
 namespace ComicFileUploaderApp
 {
@@ -18,14 +19,33 @@ namespace ComicFileUploaderApp
 
     class LocalComicFileUploader
     {
-        public static register_result RegisterOneFile(FileInfo postedfile)
+        public static register_result RegisterOneFile(string libDirName, FileInfo postedfile)
         {
             byte[] title_img_bytes;
-            return RegisterOneFile(postedfile, out title_img_bytes);
+            return RegisterOneFile(libDirName, postedfile, out title_img_bytes);
         }
 
-        public static register_result RegisterOneFile(FileInfo postedfile, out byte[] title_img_bytes)
+        public const string libDirRoot = "\\\\RASPBERRYPI\\RaspberryPi\\";
+        public const string libDirLocal = "/Extern/";
+
+        public static register_result RegisterOneFile(string libDirName, FileInfo postedfile, out byte[] title_img_bytes)
         {
+            Uri rootUri = new Uri(libDirRoot);
+            Uri libDirUri = new Uri(libDirName + "\\");
+            Uri fileDirUri = new Uri(postedfile.DirectoryName + "\\");
+
+            Uri relativeLibUri = rootUri.MakeRelativeUri(libDirUri);
+
+            Uri relativeFileDirUriFromLib = libDirUri.MakeRelativeUri(fileDirUri);
+                        
+            if (relativeFileDirUriFromLib.ToString().Length>0)
+            {
+                Console.WriteLine("dd");
+            }
+
+            string local_file_dir = libDirLocal + relativeLibUri.ToString() + relativeFileDirUriFromLib.ToString();
+            //string local_file_path = local_file_dir  + "/" + postedfile.Name;
+
             title_img_bytes = null;
 
             string ext = Path.GetExtension(postedfile.Name).ToLower();
@@ -34,7 +54,7 @@ namespace ComicFileUploaderApp
                 return register_result.err_not_zip;
             }
 
-            if (OneFileUploader.odbc_CheckSameFullpath(postedfile.Name, postedfile.DirectoryName))
+            if (OneFileUploader.odbc_CheckSameFullpath(postedfile.Name, local_file_dir))
             {
                 return register_result.err_same_full_path;
             }
@@ -47,7 +67,7 @@ namespace ComicFileUploaderApp
                 else if (ext == ".rar")
                     OneFileUploader.ExtractTitleImgFromRar(out title_img_bytes, out title_img_ext, fs);
             }
-
+            
             if (title_img_bytes == null)
             {
                 return register_result.err_no_title_img;
@@ -71,7 +91,7 @@ namespace ComicFileUploaderApp
             }
 
             int ID = -1;
-            OneFileUploader.odbc_InsertNew_ComicsNew(out ID, filename, postedfile.DirectoryName, postedfile.Name, (int)postedfile.Length, sTitle, title_img_bytes, title_img_ext);
+            OneFileUploader.odbc_InsertNew_ComicsNew(out ID, filename, local_file_dir, postedfile.Name, (int)postedfile.Length, sTitle, title_img_bytes, title_img_ext, relativeLibUri.ToString(), relativeFileDirUriFromLib.ToString());
 
             return register_result.success;
         }
