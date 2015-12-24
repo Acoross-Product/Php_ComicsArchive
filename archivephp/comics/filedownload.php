@@ -1,18 +1,14 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
-
-function mb_basename($path) { return end(explode('/',$path)); } 
-function utf2euc($str) { return iconv("UTF-8","cp949//IGNORE", $str); }
-function is_ie() {
+function mb_basename($path) { return end(explode('/',$path)); }
+function utf2euc($str) { return iconv("UTF-8","EUC-KR", $str); }
+function is_ie() 
+{
 	if(!isset($_SERVER['HTTP_USER_AGENT']))return false;
-	if(strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) return true; // IE8
-	if(strpos($_SERVER['HTTP_USER_AGENT'], 'Windows NT 6.1') !== false) return true; // IE11
-	if(strpos($_SERVER['HTTP_USER_AGENT'], 'Windows') !== false) return true; // edge
+	if(strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE')) return true;
+	if(strpos($_SERVER['HTTP_USER_AGENT'], 'Edge')) return true;
 	return false;
 }
-?>
-
-<?php
 function download($path, $filename)
 {
 	ignore_user_abort(true);
@@ -35,18 +31,18 @@ function download($path, $filename)
 			case "rar": $ctype="application/rar"; break;
 			default: $ctype="application/force-download"; 
 		}
-
-		header("Pragma: public"); 
-		header("Expires: 0"); 
-		header("Cache-Control: must-revalidate, post-check=0, pre-check=0"); 
-		header("Cache-Control: public"); 
-		header("Content-Description: File Transfer"); 
-		header("Content-Type: $ctype"); 
-
-		if (is_ie() )
+		
+		if ( is_ie() )
 		{
 			$dl_file = utf2euc($dl_file);
 		}
+		
+		header("Pragma: public"); 
+		header("Expires: 0"); 
+		//header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Cache-Control: public"); 
+		header("Content-Description: File Transfer"); 
+		header("Content-Type: $ctype"); 
 		$header="Content-Disposition: attachment; filename='".$dl_file."';"; 
 		header($header ); 
 		header("Content-Transfer-Encoding: binary"); 
@@ -67,6 +63,5 @@ function download($path, $filename)
 	fclose ($fd);
 	exit;
 }
-
 download($_GET['path'], $_GET['filename']);
 ?>

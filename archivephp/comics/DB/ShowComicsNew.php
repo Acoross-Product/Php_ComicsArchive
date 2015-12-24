@@ -2,6 +2,7 @@
 ini_set("display_errors","1");
 ERROR_REPORTING( E_ALL | E_STRICT );
 include_once('UniversalConnect.php');
+include_once('imageSizer.php');
 
 class ShowComicsNew
 {
@@ -34,7 +35,7 @@ class ShowComicsNew
 		if (!empty($title))
 		{
 			echo "find by title<br/>";
-			$comic_new_query = "SELECT comic_id, title, title_img, filepath, filename, filesize FROM comics_new WHERE title like '%".$title."%' order by comic_id ".$order_str." LIMIT ".$from.", 10";
+			$comic_new_query = "SELECT comic_id, title, title_img, filepath, filename, filesize FROM comics_new WHERE filename like '%".$title."%' order by comic_id ".$order_str." LIMIT ".$from.", 10";
 		}
 		
         if ($result = $this->test->query($comic_new_query))
@@ -44,19 +45,21 @@ class ShowComicsNew
             {
 				$fix_height = 350;
 				echo '<tr><th>';
-				printf("%d %s", $obj->comic_id, $obj->title);
-				echo "<br/>";
-				echo ($obj->filesize>>20)."mb";
+                    echo "<a href='ShowAllImageInZip.php?path=".$obj->filepath."&filename=".$obj->filename."'>";
+                    printf("%d %s", $obj->comic_id, $obj->title);
+                    echo "</a>";
+                    echo "<br/>";
+                    echo ($obj->filesize>>20)."mb";
 				echo '</th></tr>';
 				
 				echo '<tr><th>';
-				$b64 = base64_encode($obj->title_img);				
-				list($width, $height) = getimagesizefromstring($obj->title_img);
-				$ratio = $width / $height;
-				$width = $fix_height * $ratio;
-				$width = min($width, 500);
-				
-                echo "<a href='filedownload.php?path=".$obj->filepath."&filename=".$obj->filename."'><img src='data:image/jpeg;base64, $b64' width='".$width."' height='".$fix_height."'></a>";
+                    $b64 = base64_encode($obj->title_img);				
+                    list($width, $height) = getimagesizefromstring($obj->title_img);
+                    
+					list($width, $height) = fixHeight($fix_height, $width, $height);
+					$width = min($width, 500);
+                    
+                    echo "<a href='filedownload.php?path=".$obj->filepath."&filename=".$obj->filename."'><img src='data:image/jpeg;base64, $b64' width='".$width."' height='".$height."'></a>";
 				echo '</th></tr>';
             }
 			
