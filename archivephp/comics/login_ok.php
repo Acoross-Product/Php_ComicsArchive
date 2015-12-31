@@ -2,7 +2,7 @@
 if(!isset($_POST['user_id']) || !isset($_POST['user_pw'])) exit;
 $user_id = $_POST['user_id'];
 $user_pw = $_POST['user_pw'];
-$members = array('acoross'=>array('pw'=>'emfdjdhwlak', 'name'=>'owner'));
+$members = array('user_id_val'=>array('pw'=>'password', 'name'=>'user_name'));
  
 if(!isset($members[$user_id])) {
 		echo "11 <br/>";

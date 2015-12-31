@@ -2,10 +2,10 @@
 //Filename: IConnectInfo.php
 interface IConnectInfo
 {
-	const HOST ="localhost";
-	const UNAME ="acoross";
-	const PW ="emfdjdhwlak";
-	const DBNAME = "archive2";
+	const HOST ="xxxxx";
+	const UNAME ="xxxxx";
+	const PW ="xxxxx";
+	const DBNAME = "xxxxx";
 	
 	public static function doConnect();
 }
